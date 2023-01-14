@@ -1,7 +1,9 @@
 import styled from 'styled-components';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Card from '../../components/Card';
+import Pagination from '../../components/Pagination';
 
 const QuestionsContainer = styled.div`
     display: flex;
@@ -10,41 +12,48 @@ const QuestionsContainer = styled.div`
     margin: 5%;
 `;
 
-const CardLink = styled.a`
+const CardLink = styled(Link)`
     text-decoration: none;
-`
+`;
 
 function Questions() {
     const [loading, setLoading] = useState(false);
     const [questions, setQuestions] = useState([]);
+    const [hasMore, setHasMore] = useState(false);
+
+    const router = useRouter();
+    const { page } = router.query;
+    let pageNumber: string = page as string;
 
     useEffect(() => {
         async function fetchData() {
             const data = await fetch(
-                "https://api.stackexchange.com/2.2/questions?order=desc&sort=hot&tagged=reactjs&site=stackoverflow");
+                `https://api.stackexchange.com/2.2/questions?${pageNumber ? `page=${pageNumber}&` : ``}pagesize=10&order=desc&sort=hot&tagged=reactjs&site=stackoverflow`);
             const result = await data.json();
 
             if (result) {
                 setQuestions(result.items);
+                setHasMore(result.has_more);
                 setLoading(false);
             }
         }
 
         fetchData();
-    }, []);
+    }, [pageNumber]);
 
     return (
         <QuestionsContainer>
             <h2>Questions</h2>
             {loading ? (<span>Loading...</span>) : (
                 <>
-                    {questions.map((question: any) => (
-                        <Link
-                            key={question.question_id}
-                            href={`/questions/${question.question_id}`}
-                            passHref
-                        >
-                            <CardLink>
+                    <div>
+                        {questions.map((question: any) => (
+                            <CardLink
+                                style={{ textDecoration: 'none' }}
+                                key={question.question_id}
+                                href={`/questions/${question.question_id}`}
+                                passHref
+                            >
                                 <Card
                                     key={question.question_id}
                                     title={question.title}
@@ -52,8 +61,9 @@ function Questions() {
                                     answers={question.answer_count}
                                 />
                             </CardLink>
-                        </Link>
-                    ))}
+                        ))}
+                    </div>
+                    <Pagination currentPage={parseInt(pageNumber) || 1} hasMore={hasMore} />
                 </>
             )}
         </QuestionsContainer>
