@@ -17,7 +17,7 @@ const Title = styled.h2`
 `;
 
 const Count = styled.span`
-    color: darkGray;
+    color: #585858;
 `;
 
 function Card(props: any) {
