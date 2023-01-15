@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import Link from 'next/link';
+import Head from 'next/head';
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Card from '../../components/Card';
 import Pagination from '../../components/Pagination';
@@ -48,29 +49,34 @@ export const getServerSideProps: GetServerSideProps<{ data: Data }> = async (con
 
 function Questions({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     return (
-        <QuestionsContainer>
-            <h2>Questions</h2>
-            <>
-                <div>
-                    {data.questions.map((question: any) => (
-                        <CardLink
-                            style={{ textDecoration: 'none' }}
-                            key={question.question_id}
-                            href={`/questions/${question.question_id}`}
-                            passHref
-                        >
-                            <Card
+        <>
+            <Head>
+                <title>Questions</title>
+            </Head>
+            <QuestionsContainer>
+                <h2>Questions</h2>
+                <>
+                    <div>
+                        {data.questions.map((question: any) => (
+                            <CardLink
+                                style={{ textDecoration: 'none' }}
                                 key={question.question_id}
-                                title={question.title}
-                                views={question.view_count}
-                                answers={question.answer_count}
-                            />
-                        </CardLink>
-                    ))}
-                </div>
-                <Pagination currentPage={parseInt(data.page) || 1} hasMore={data.hasMore} />
-            </>
-        </QuestionsContainer>
+                                href={`/questions/${question.question_id}`}
+                                passHref
+                            >
+                                <Card
+                                    key={question.question_id}
+                                    title={question.title}
+                                    views={question.view_count}
+                                    answers={question.answer_count}
+                                />
+                            </CardLink>
+                        ))}
+                    </div>
+                    <Pagination currentPage={parseInt(data.page) || 1} hasMore={data.hasMore} />
+                </>
+            </QuestionsContainer>
+        </>
     );
 }
 

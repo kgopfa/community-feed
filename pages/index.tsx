@@ -1,5 +1,5 @@
 import { Inter } from '@next/font/google';
-import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { GetServerSidePropsContext } from 'next';
 import Questions, { getServerSideProps as getServerSidePropsQuestions } from './questions';
 
 const inter = Inter({ subsets: ['latin'] });
