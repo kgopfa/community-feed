@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import Card from '../../components/Card';
 import Pagination from '../../components/Pagination';
 
@@ -16,56 +15,61 @@ const CardLink = styled(Link)`
     text-decoration: none;
 `;
 
-function Questions() {
-    const [loading, setLoading] = useState(false);
-    const [questions, setQuestions] = useState([]);
-    const [hasMore, setHasMore] = useState(false);
+type Question = {
+    question_id: string;
+    title: string;
+    view_count: string;
+    answer_count: number;
+}
 
-    const router = useRouter();
-    const { page } = router.query;
-    let pageNumber: string = page as string;
+type Data = {
+    page: string;
+    questions: Question[];
+    hasMore: boolean;
+}
 
-    useEffect(() => {
-        async function fetchData() {
-            const data = await fetch(
-                `https://api.stackexchange.com/2.2/questions?${pageNumber ? `page=${pageNumber}&` : ``}pagesize=10&order=desc&sort=hot&tagged=reactjs&site=stackoverflow`);
-            const result = await data.json();
+export const getServerSideProps: GetServerSideProps<{ data: Data }> = async (context) => {
+    const { page } = context.query;
+    const result = await fetch(
+        `https://api.stackexchange.com/2.2/questions?${page ? `page=${page}&` : ``}pagesize=10&order=desc&sort=hot&tagged=reactjs&site=stackoverflow`);
+    const parsedData = await result.json();
+    const data : Data = {
+        page: page as string || '1',
+        questions: parsedData.items,
+        hasMore: parsedData
+    }
 
-            if (result) {
-                setQuestions(result.items);
-                setHasMore(result.has_more);
-                setLoading(false);
-            }
-        }
+    return {
+        props: {
+            data,
+        },
+    }
+}
 
-        fetchData();
-    }, [pageNumber]);
-
+function Questions({ data }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     return (
         <QuestionsContainer>
             <h2>Questions</h2>
-            {loading ? (<span>Loading...</span>) : (
-                <>
-                    <div>
-                        {questions.map((question: any) => (
-                            <CardLink
-                                style={{ textDecoration: 'none' }}
+            <>
+                <div>
+                    {data.questions.map((question: any) => (
+                        <CardLink
+                            style={{ textDecoration: 'none' }}
+                            key={question.question_id}
+                            href={`/questions/${question.question_id}`}
+                            passHref
+                        >
+                            <Card
                                 key={question.question_id}
-                                href={`/questions/${question.question_id}`}
-                                passHref
-                            >
-                                <Card
-                                    key={question.question_id}
-                                    title={question.title}
-                                    views={question.view_count}
-                                    answers={question.answer_count}
-                                />
-                            </CardLink>
-                        ))}
-                    </div>
-                    <Pagination currentPage={parseInt(pageNumber) || 1} hasMore={hasMore} />
-                </>
-            )}
+                                title={question.title}
+                                views={question.view_count}
+                                answers={question.answer_count}
+                            />
+                        </CardLink>
+                    ))}
+                </div>
+                <Pagination currentPage={parseInt(data.page) || 1} hasMore={data.hasMore} />
+            </>
         </QuestionsContainer>
     );
 }
